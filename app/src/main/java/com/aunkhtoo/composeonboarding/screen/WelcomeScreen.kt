@@ -1,6 +1,5 @@
 package com.aunkhtoo.composeonboarding.screen
 
-import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -87,12 +86,13 @@ fun WelcomeScreen(
       modifier = Modifier
         .constrainAs(btnStart) {
           linkTo(start = parent.start, end = parent.end)
-          bottom.linkTo(parent.bottom, margin = 20.dp)
+          bottom.linkTo(parent.bottom, margin = 25.dp)
           width = Dimension.fillToConstraints
           height = Dimension.wrapContent
         },
       colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.tertiary),
-      shape = RoundedCornerShape(size = 10.dp)
+      shape = RoundedCornerShape(size = 10.dp),
+      elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp)
     ) {
       Text(text = "Get Started", fontSize = 20.sp, modifier = Modifier.padding(8.dp))
     }
