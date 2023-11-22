@@ -63,7 +63,7 @@ fun OnBoardingApp() {
 fun CustomLinearProgressBar(modifier: Modifier = Modifier, progress: Float) {
   Box(
     modifier = modifier
-      .height(15.dp)
+      .height(12.dp)
       .clip(RoundedCornerShape(size = 10.dp))
       .fillMaxWidth(progress)
       .background(color = MaterialTheme.colorScheme.primary)
