@@ -2,6 +2,7 @@
 plugins {
   alias(libs.plugins.androidApplication)
   alias(libs.plugins.kotlinAndroid)
+  alias(libs.plugins.kotlin.ksp)
 }
 
 android {
@@ -35,6 +36,7 @@ android {
     jvmTarget = "1.8"
   }
   buildFeatures {
+    buildConfig = true
     compose = true
   }
   composeOptions {
@@ -63,7 +65,19 @@ dependencies {
   implementation(libs.androidx.compose.runtime.livedata)
   implementation(libs.lifecycle.runtime.ktx)
 
+  implementation(libs.androidx.lifecycle.liveData)
+  implementation(libs.androidx.lifecycle.viewModel)
+  implementation(libs.androidx.lifecycle.extensions)
+
   implementation(libs.androidx.constraintlayout.compose)
+
+  implementation(libs.moshi.core)
+  implementation(libs.moshi.adapters)
+  implementation(libs.moshi.kotlin)
+  ksp(libs.moshi.codeGen)
+
+  //timber
+  implementation(libs.timber)
 
   testImplementation(libs.junit)
   androidTestImplementation(libs.androidx.test.ext.junit)

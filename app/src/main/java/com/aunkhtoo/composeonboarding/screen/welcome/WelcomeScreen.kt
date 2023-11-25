@@ -1,4 +1,4 @@
-package com.aunkhtoo.composeonboarding.screen
+package com.aunkhtoo.composeonboarding.screen.welcome
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.fillMaxSize
@@ -29,7 +29,6 @@ fun WelcomeScreen(
   onGetStartedClick: () -> Unit
 ) {
 
-
   ConstraintLayout(
     modifier = Modifier
       .fillMaxSize()
@@ -40,7 +39,7 @@ fun WelcomeScreen(
 
     Text(
       text = "Welcome to DailyVita",
-      fontSize = 26.sp,
+      fontSize = 28.sp,
       color = MaterialTheme.colorScheme.onSurface,
       fontWeight = FontWeight.Bold,
       modifier = Modifier.constrainAs(tvWelcome) {

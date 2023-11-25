@@ -3,6 +3,7 @@ package com.aunkhtoo.composeonboarding
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import com.aunkhtoo.composeonboarding.screen.OnBoardingMain
 import com.aunkhtoo.composeonboarding.ui.theme.ComposeOnBoardingTheme
 
 class MainActivity : ComponentActivity() {
@@ -10,7 +11,7 @@ class MainActivity : ComponentActivity() {
     super.onCreate(savedInstanceState)
     setContent {
       ComposeOnBoardingTheme {
-        OnBoardingApp()
+        OnBoardingMain()
       }
     }
   }
