@@ -86,7 +86,7 @@ fun WelcomeScreen(
     }
 
     Button(
-      onClick = { onGetStartedClick() },
+      onClick = onGetStartedClick,
       modifier = Modifier.fillMaxWidth(),
       colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.tertiary),
       shape = RoundedCornerShape(size = 10.dp),

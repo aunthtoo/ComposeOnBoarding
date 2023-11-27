@@ -23,6 +23,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.aunkhtoo.composeonboarding.screen.allergy.AllergyScreen
 import com.aunkhtoo.composeonboarding.screen.diet.DietScreen
 import com.aunkhtoo.composeonboarding.screen.healthconcern.HealthConcernScreen
+import com.aunkhtoo.composeonboarding.screen.survey.SurveyScreen
 import com.aunkhtoo.composeonboarding.screen.welcome.WelcomeScreen
 import kotlinx.coroutines.launch
 
@@ -126,24 +127,30 @@ fun OnBoardingMain() {
               pagerState.animateScrollToPage(2)
             }
           }, onClickNext = {
+            coroutineScope.launch {
+              pagerState.animateScrollToPage(4)
+            }
 
           })
         }
 
-        else -> {
-          HealthConcernScreen(viewModel = viewModel, onBackPressed = {
-            coroutineScope.launch {
-              pagerState.animateScrollToPage(0)
-            }
-          })
+        4 -> {
+          SurveyScreen(viewModel = viewModel) {
+            //get my vitamin click
+            viewModel.showFinalResult()
+          }
         }
       }
 
     }
 
 
-
     CustomLinearProgressBar(progress = { pagerState.currentPage / 4f })
+
+    if (viewModel.showResultDialog.value)
+      VitaminResultDialog(jsonString = viewModel.finalResultJson, setShowDialog = {
+        viewModel.showResultDialog.value = it
+      })
 
   }
 

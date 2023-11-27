@@ -117,7 +117,7 @@ fun DietScreen(
     ) {
 
       TextButton(
-        onClick = { onBackPressed() },
+        onClick = onBackPressed,
         shape = RoundedCornerShape(size = 10.dp)
       ) {
         Text(
@@ -129,7 +129,7 @@ fun DietScreen(
       }
 
       Button(
-        onClick = { onClickNext() },
+        onClick = onClickNext,
         colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.tertiary),
         shape = RoundedCornerShape(size = 10.dp),
         elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp)

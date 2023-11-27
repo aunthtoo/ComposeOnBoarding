@@ -6,6 +6,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.aunkhtoo.composeonboarding.JsonDataConstants
 import com.aunkhtoo.composeonboarding.ext.removeWhen
+import com.aunkhtoo.composeonboarding.moshi.AllergyJson
+import com.aunkhtoo.composeonboarding.moshi.DietJson
+import com.aunkhtoo.composeonboarding.moshi.FinalResultJson
+import com.aunkhtoo.composeonboarding.moshi.HealthConcernJson
 import com.aunkhtoo.composeonboarding.screen.allergy.AllergyViewItem
 import com.aunkhtoo.composeonboarding.screen.diet.DietViewItem
 import com.aunkhtoo.composeonboarding.screen.healthconcern.HealthConcernViewItem
@@ -224,6 +228,73 @@ class SharedViewModel : ViewModel() {
     }
   }
 
-
   //end of allergy section
+
+  //survey section
+  val dailyExposureItems = listOf("Yes", "No")
+  val selectedDailyExposure = mutableStateOf(dailyExposureItems[0])
+  fun setSelectedDailyExposure(dailyExposure: String) {
+    viewModelScope.launch {
+      selectedDailyExposure.value = dailyExposure
+    }
+  }
+
+  val smokeItems = listOf("Yes", "No")
+  val selectedSmoke = mutableStateOf(smokeItems[0])
+  fun setSelectedSmoke(smoke: String) {
+    viewModelScope.launch {
+      selectedSmoke.value = smoke
+    }
+  }
+
+  val alcoholicItems = listOf("0 - 1", "2 - 5", "5 +")
+  val selectedAlcoholic = mutableStateOf(alcoholicItems[0])
+  fun setSelectedAlcoholic(alcoholic: String) {
+    viewModelScope.launch {
+      selectedAlcoholic.value = alcoholic
+    }
+  }
+
+  //end of survey section
+
+  val showResultDialog = mutableStateOf(false)
+  var finalResultJson = ""
+
+  fun showFinalResult() {
+
+    viewModelScope.launch {
+
+      val healthConcernsJson = selectedHealthConcernViewItems.mapIndexed { index, item ->
+        HealthConcernJson(id = item.id, name = item.name, priority = index + 1)
+      }
+
+      val dietsJson = selectedDietViewItems.map { item ->
+        DietJson(id = item.id, name = item.name, toolTip = item.toolTip)
+      }
+
+      val isDailyExposure = selectedDailyExposure.value == "Yes"
+      val isSmoke = selectedSmoke.value == "Yes"
+      val alcohol = selectedAlcoholic.value
+
+      val allergiesJson = selectedAllergyViewItems.map { item ->
+        AllergyJson(id = item.id, name = item.name)
+      }
+
+      finalResultJson = FinalResultJson(
+        healthConcerns = healthConcernsJson,
+        diets = dietsJson,
+        isDailyExposure = isDailyExposure,
+        isSmoke = isSmoke,
+        alcohol = alcohol,
+        allergies = allergiesJson
+      ).toJson()
+
+      //printing in console
+      println(finalResultJson)
+
+      showResultDialog.value = true
+
+    }
+
+  }
 }
