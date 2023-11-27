@@ -10,47 +10,50 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
 import com.aunkhtoo.composeonboarding.ext.noRippleClickable
+import com.aunkhtoo.composeonboarding.ext.showShortToast
 import com.aunkhtoo.composeonboarding.screen.SharedViewModel
 import com.aunkhtoo.composeonboarding.screen.allergy.component.TransparentTextField
 import com.aunkhtoo.composeonboarding.ui.theme.TransparentDark
+import timber.log.Timber
 
 /**
 Created By Aunt Htoo Aung on 26/11/2023.
  **/
 
 @Composable
-fun AddedAllergyItem(modifier: Modifier = Modifier, name: String, onClickDelete: () -> Unit) {
+fun AddedAllergyItem(modifier: Modifier = Modifier, name: String) {
 
   Box(
     modifier = modifier
@@ -59,31 +62,32 @@ fun AddedAllergyItem(modifier: Modifier = Modifier, name: String, onClickDelete:
       .padding(10.dp),
     contentAlignment = Alignment.Center
   ) {
-    Row(
-      verticalAlignment = Alignment.CenterVertically,
-      horizontalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-      Text(text = name, color = MaterialTheme.colorScheme.surface, fontSize = 18.sp)
-
-      Icon(
-        modifier = Modifier
-          .size(20.dp)
-          .noRippleClickable {
-            onClickDelete()
-          },
-        imageVector = Icons.Outlined.Close,
-        contentDescription = null,
-        tint = MaterialTheme.colorScheme.surface
-      )
-    }
+    Text(text = name, color = MaterialTheme.colorScheme.surface, fontSize = 18.sp)
 
   }
 
 }
 
-@OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3Api::class)
+@OptIn(
+  ExperimentalLayoutApi::class, ExperimentalMaterial3Api::class,
+  ExperimentalComposeUiApi::class
+)
 @Composable
-fun AllergyContent(modifier: Modifier = Modifier) {
+fun AllergyContent(
+  modifier: Modifier = Modifier,
+  selectedAllergies: List<AllergyViewItem>,
+  filteredAllergies: List<AllergyViewItem>,
+  allergyTextValue: String,
+  suggestedAllergy: String,
+  enterAllergyText: (String) -> Unit,
+  addAllergy: (AllergyViewItem) -> Unit,
+  removeLastAllergy: () -> Unit
+) {
+
+  val context = LocalContext.current
+
+  val focusRequester = remember { FocusRequester() }
+  val localSoftwareKeyboardController = LocalSoftwareKeyboardController.current
 
   Column(
     modifier = modifier
@@ -93,6 +97,10 @@ fun AllergyContent(modifier: Modifier = Modifier) {
         color = TransparentDark,
         shape = RoundedCornerShape(size = 4.dp)
       )
+      .noRippleClickable {
+        focusRequester.requestFocus()
+        localSoftwareKeyboardController?.show()
+      }
   ) {
 
     FlowRow(
@@ -104,25 +112,40 @@ fun AllergyContent(modifier: Modifier = Modifier) {
       verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
 
-      AddedAllergyItem(name = "shit", onClickDelete = {
-
-      })
-
-      AddedAllergyItem(name = "shit", onClickDelete = {
-
-      })
-
-
-      var textField by remember {
-        mutableStateOf("")
+      selectedAllergies.forEach { item ->
+        AddedAllergyItem(name = item.name)
       }
 
       TransparentTextField(
-        onValueChange = { textField = it },
-        value = textField,
-        placeholder = "Enter Allergy"
+        modifier = Modifier.focusRequester(focusRequester),
+        onValueChange = {
+          enterAllergyText(it)
+        },
+        value = allergyTextValue,
+        placeholder = "Enter Allergy",
+        suffixValue = suggestedAllergy,
+        onBackspaceInEmptyValue = {
+          Timber.e("aha on backspace in empty")
+          removeLastAllergy.invoke()
+        }
       )
     }
+
+    if (filteredAllergies.isNotEmpty())
+      Divider(color = TransparentDark)
+
+    LazyColumn(modifier = Modifier.heightIn(max = 1000.dp)) {
+      items(filteredAllergies) { item ->
+        Text(modifier = Modifier
+          .fillMaxWidth()
+          .noRippleClickable {
+            addAllergy.invoke(item)
+          }
+          .padding(10.dp), text = item.name, fontSize = 18.sp)
+      }
+    }
+
+
   }
 }
 
@@ -136,7 +159,11 @@ fun AllergyScreen(
   val context = LocalContext.current
 
   LaunchedEffect(context) {
+    viewModel.getAllergies()
 
+    viewModel.allergyToastMessage.collect { message ->
+      context.showShortToast(message)
+    }
   }
 
   Column {
@@ -162,14 +189,22 @@ fun AllergyScreen(
         color = MaterialTheme.colorScheme.onSurface
       )
 
-      AllergyContent(modifier = Modifier.constrainAs(allergyContent) {
-        linkTo(start = parent.start, end = parent.end)
-        top.linkTo(tvAllergyTitle.bottom, margin = 16.dp)
-        width = Dimension.fillToConstraints
-      })
+      AllergyContent(
+        modifier = Modifier.constrainAs(allergyContent) {
+          linkTo(start = parent.start, end = parent.end)
+          top.linkTo(tvAllergyTitle.bottom, margin = 16.dp)
+          width = Dimension.fillToConstraints
+        },
+        selectedAllergies = viewModel.selectedAllergyViewItems.toList(),
+        filteredAllergies = viewModel.filteredAllergyViewItems.toList(),
+        allergyTextValue = viewModel.allergyText.value,
+        suggestedAllergy = viewModel.suggestedAllergyText.value,
+        enterAllergyText = viewModel::enterAllergy,
+        addAllergy = viewModel::addAllergy,
+        removeLastAllergy = viewModel::removeLastAllergy
+      )
 
     }
-
 
     Row(
       horizontalArrangement = Arrangement.spacedBy(20.dp, Alignment.CenterHorizontally),

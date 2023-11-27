@@ -29,7 +29,6 @@ import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
 import com.aunkhtoo.composeonboarding.screen.SharedViewModel
 import com.aunkhtoo.composeonboarding.screen.diet.component.LabelCheckbox
-import timber.log.Timber
 
 /**
 Created By Aunt Htoo Aung on 25/11/2023.
@@ -93,9 +92,7 @@ fun DietScreen(
         item {
           LabelCheckbox(
             checked = viewModel.checkedNoneState.value,
-            onCheckedChange = { checked ->
-              viewModel.checkedNone(checked)
-            },
+            onCheckedChange = viewModel::checkedNone,
             label = "None"
           )
         }
@@ -109,7 +106,6 @@ fun DietScreen(
           }, label = item.name, enabledTooltip = true, tooltipText = item.toolTip)
         }
       }
-
 
     }
 

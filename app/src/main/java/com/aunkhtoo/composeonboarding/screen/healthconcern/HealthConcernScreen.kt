@@ -42,7 +42,6 @@ import com.aunkhtoo.composeonboarding.R
 import com.aunkhtoo.composeonboarding.ext.showShortToast
 import com.aunkhtoo.composeonboarding.screen.SharedViewModel
 import com.aunkhtoo.composeonboarding.screen.healthconcern.component.ReorderableList
-import timber.log.Timber
 
 /**
 Created By Aunt Htoo Aung on 22/11/2023.
@@ -129,7 +128,7 @@ fun HealthConcernScreen(
 
     viewModel.getHealthConcerns()
 
-    viewModel.viewCommand.collect {
+    viewModel.healthConcernViewCommand.collect {
       when (it) {
         SharedViewModel.HealthConcernViewCommand.CannotSelectedMoreThanFiveItem -> {
           context.showShortToast("You can\'t select more than five")

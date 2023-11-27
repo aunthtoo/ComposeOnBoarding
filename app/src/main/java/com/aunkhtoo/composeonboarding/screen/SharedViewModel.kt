@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.aunkhtoo.composeonboarding.JsonDataConstants
 import com.aunkhtoo.composeonboarding.ext.removeWhen
+import com.aunkhtoo.composeonboarding.screen.allergy.AllergyViewItem
 import com.aunkhtoo.composeonboarding.screen.diet.DietViewItem
 import com.aunkhtoo.composeonboarding.screen.healthconcern.HealthConcernViewItem
 import com.aunkhtoo.composeonboarding.screen.healthconcern.component.move
@@ -23,7 +24,7 @@ class SharedViewModel : ViewModel() {
 
   }
 
-  val viewCommand = MutableSharedFlow<HealthConcernViewCommand>()
+  val healthConcernViewCommand = MutableSharedFlow<HealthConcernViewCommand>()
 
   val healthConcernViewItems = mutableStateListOf<HealthConcernViewItem>()
 
@@ -50,7 +51,7 @@ class SharedViewModel : ViewModel() {
 
       if (selected && selectedHealthConcernViewItems.size >= 5) {
 
-        viewCommand.emit(HealthConcernViewCommand.CannotSelectedMoreThanFiveItem)
+        healthConcernViewCommand.emit(HealthConcernViewCommand.CannotSelectedMoreThanFiveItem)
         return@launch
       }
 
@@ -144,6 +145,84 @@ class SharedViewModel : ViewModel() {
   //end of diet section
 
   //allergy section
+
+  private val allergyViewItems = mutableListOf<AllergyViewItem>()
+  val filteredAllergyViewItems = mutableStateListOf<AllergyViewItem>()
+  val selectedAllergyViewItems = mutableStateListOf<AllergyViewItem>()
+  val allergyText = mutableStateOf("")
+  val suggestedAllergyText = mutableStateOf("")
+
+  val allergyToastMessage = MutableSharedFlow<String>()
+
+  fun getAllergies() {
+    viewModelScope.launch {
+
+      if (allergyViewItems.isEmpty()) {
+        val allergies = JsonDataConstants.allergies.map {
+          AllergyViewItem(id = it.id, name = it.name)
+        }
+
+        allergyViewItems.addAll(allergies)
+      }
+
+    }
+  }
+
+  fun enterAllergy(allergyNameValue: String) {
+    viewModelScope.launch {
+
+      allergyText.value = allergyNameValue
+
+      if (allergyNameValue.isEmpty()) {
+        filteredAllergyViewItems.clear()
+        suggestedAllergyText.value = ""
+        return@launch
+      }
+
+      filteredAllergyViewItems.clear()
+
+      filteredAllergyViewItems.addAll(
+        allergyViewItems.filter {
+          it.name.contains(allergyNameValue, ignoreCase = true)
+        }
+      )
+
+      val firstItem = filteredAllergyViewItems.firstOrNull()
+
+      if (firstItem == null) {
+        suggestedAllergyText.value = ""
+      } else {
+        suggestedAllergyText.value = firstItem.name
+
+        if (firstItem.name.equals(allergyNameValue, ignoreCase = true)) {
+          addAllergy(firstItem)
+        }
+      }
+
+
+    }
+  }
+
+  fun addAllergy(item: AllergyViewItem) {
+    viewModelScope.launch {
+      if (selectedAllergyViewItems.contains(item).not()) {
+        selectedAllergyViewItems.add(item)
+        filteredAllergyViewItems.clear()
+        suggestedAllergyText.value = ""
+        allergyText.value = ""
+      } else {
+        allergyToastMessage.emit("You can\'t add same allergy!")
+      }
+    }
+  }
+
+  fun removeLastAllergy() {
+    viewModelScope.launch {
+      selectedAllergyViewItems.removeLastOrNull()
+      filteredAllergyViewItems.clear()
+      suggestedAllergyText.value = ""
+    }
+  }
 
 
   //end of allergy section
