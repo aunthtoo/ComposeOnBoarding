@@ -17,7 +17,7 @@ import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
 import com.aunkhtoo.composeonboarding.R
-import com.aunkhtoo.composeonboarding.SharedViewModel
+import com.aunkhtoo.composeonboarding.screen.SharedViewModel
 
 /**
 Created By Aunt Htoo Aung on 22/11/2023.

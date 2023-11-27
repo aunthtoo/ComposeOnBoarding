@@ -1,14 +1,15 @@
 package com.aunkhtoo.composeonboarding.screen.healthconcern
 
-import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
@@ -24,7 +25,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -40,7 +40,9 @@ import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
 import com.aunkhtoo.composeonboarding.R
 import com.aunkhtoo.composeonboarding.ext.showShortToast
+import com.aunkhtoo.composeonboarding.screen.SharedViewModel
 import com.aunkhtoo.composeonboarding.screen.healthconcern.component.ReorderableList
+import timber.log.Timber
 
 /**
 Created By Aunt Htoo Aung on 22/11/2023.
@@ -85,6 +87,7 @@ fun DraggableHealthConcern(modifier: Modifier = Modifier, item: HealthConcernVie
     horizontalArrangement = Arrangement.SpaceBetween,
     modifier = modifier
       .fillMaxWidth()
+      .clickable(true) {}
       .border(
         width = 1.dp,
         color = MaterialTheme.colorScheme.primary,
@@ -114,57 +117,38 @@ fun DraggableHealthConcern(modifier: Modifier = Modifier, item: HealthConcernVie
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun HealthConcernScreen(
-  onBackPressed: () -> Unit
+  viewModel: SharedViewModel,
+  onBackPressed: () -> Unit,
+  onClickNext: () -> Unit = {}
 ) {
-
-
-  val viewModel: HealthConcernViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
-
-  val backpressedLambda: () -> Unit = {
-    viewModel.isStart = true
-    viewModel.clearHealthConcern()
-    onBackPressed()
-  }
 
   val context = LocalContext.current
   val haptic = LocalHapticFeedback.current
 
-  BackHandler {
-    backpressedLambda()
+  LaunchedEffect(context) {
+
+    viewModel.getHealthConcerns()
+
+    viewModel.viewCommand.collect {
+      when (it) {
+        SharedViewModel.HealthConcernViewCommand.CannotSelectedMoreThanFiveItem -> {
+          context.showShortToast("You can\'t select more than five")
+        }
+      }
+    }
   }
 
   Column {
 
     ConstraintLayout(
       modifier = Modifier
-        .fillMaxWidth()
+        .fillMaxSize()
         .weight(1f)
         .padding(all = 16.dp)
         .verticalScroll(state = rememberScrollState())
     ) {
 
       val (sectionTitle, selectableHealthConcern, tvPrioritize, prioritizeHealthConcern) = createRefs()
-
-
-      val healthConcernViewItems =
-        viewModel.healthConcernsLiveData.observeAsState(initial = emptyList()).value
-
-      LaunchedEffect(Unit) {
-
-        if (viewModel.isStart) {
-          viewModel.isStart = false
-
-          viewModel.getHealthConcerns()
-
-          viewModel.viewCommand.collect {
-            when (it) {
-              HealthConcernViewModel.HealthConcernViewCommand.CannotSelectedMoreThanFiveItem -> {
-                context.showShortToast("You can\'t select more than five")
-              }
-            }
-          }
-        }
-      }
 
       Row(modifier = Modifier
         .fillMaxWidth()
@@ -197,7 +181,7 @@ fun HealthConcernScreen(
         verticalArrangement = Arrangement.spacedBy(12.dp)
       ) {
 
-        healthConcernViewItems.forEachIndexed { index, healthConcernViewItem ->
+        viewModel.healthConcernViewItems.forEachIndexed { index, healthConcernViewItem ->
           SelectableHealthConcernItem(
             modifier = Modifier.selectable(
               selected = healthConcernViewItem.isSelected,
@@ -237,7 +221,7 @@ fun HealthConcernScreen(
           }
           .heightIn(max = 1000.dp),
         items = viewModel.selectedHealthConcernViewItems,
-        onMove = { from, to -> viewModel.moveSelectedHealthConcernItem(from = from, to = to) },
+        onMove = viewModel::moveSelectedHealthConcernItem,
         verticalArrangement = Arrangement.spacedBy(10.dp),
         onDragStart = {
           haptic.performHapticFeedback(HapticFeedbackType.LongPress)
@@ -249,14 +233,14 @@ fun HealthConcernScreen(
     }
 
     Row(
-      horizontalArrangement = Arrangement.spacedBy(10.dp, Alignment.CenterHorizontally),
+      horizontalArrangement = Arrangement.spacedBy(20.dp, Alignment.CenterHorizontally),
       modifier = Modifier
         .fillMaxWidth()
         .padding(bottom = 25.dp)
     ) {
 
       TextButton(
-        onClick = { backpressedLambda() },
+        onClick = { onBackPressed() },
         shape = RoundedCornerShape(size = 10.dp)
       ) {
         Text(
@@ -268,10 +252,11 @@ fun HealthConcernScreen(
       }
 
       Button(
-        onClick = { },
+        onClick = { onClickNext() },
         colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.tertiary),
         shape = RoundedCornerShape(size = 10.dp),
-        elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp)
+        elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp),
+        enabled = viewModel.enableNextButton.value
       ) {
         Text(text = "Next", fontSize = 20.sp, modifier = Modifier.padding(8.dp))
       }

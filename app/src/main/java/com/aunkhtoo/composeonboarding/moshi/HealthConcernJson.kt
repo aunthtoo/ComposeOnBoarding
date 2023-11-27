@@ -10,7 +10,9 @@ data class HealthConcernJson(
   @Json(name = "id")
   val id: Int,
   @Json(name = "name")
-  val name: String
+  val name: String,
+  @Json(name = "priority")
+  val priority: Int = -1
 ) {
   fun mapToHealthConcern() = HealthConcern(id = id, name = name)
 }

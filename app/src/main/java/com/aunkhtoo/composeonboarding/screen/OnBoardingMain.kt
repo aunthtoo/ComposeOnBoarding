@@ -1,5 +1,7 @@
 package com.aunkhtoo.composeonboarding.screen
 
+import android.app.Activity
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -15,9 +17,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.aunkhtoo.composeonboarding.SharedViewModel
+import com.aunkhtoo.composeonboarding.screen.allergy.AllergyScreen
+import com.aunkhtoo.composeonboarding.screen.diet.DietScreen
 import com.aunkhtoo.composeonboarding.screen.healthconcern.HealthConcernScreen
 import com.aunkhtoo.composeonboarding.screen.welcome.WelcomeScreen
 import kotlinx.coroutines.launch
@@ -34,11 +38,46 @@ fun OnBoardingMain() {
 
     val viewModel: SharedViewModel = viewModel()
 
+    val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
 
     val pagerState = rememberPagerState(pageCount = {
       5
     })
+
+    BackHandler {
+      when (pagerState.currentPage) {
+        0 -> {
+          (context as? Activity)?.finish()
+        }
+
+        1 -> {
+          coroutineScope.launch {
+            pagerState.animateScrollToPage(0)
+          }
+        }
+
+        2 -> {
+          coroutineScope.launch {
+            pagerState.animateScrollToPage(1)
+          }
+        }
+
+        3 -> {
+          coroutineScope.launch {
+            pagerState.animateScrollToPage(2)
+          }
+
+        }
+
+        4 -> {
+          coroutineScope.launch {
+            pagerState.animateScrollToPage(3)
+          }
+
+        }
+      }
+    }
 
     HorizontalPager(
       modifier = Modifier
@@ -58,15 +97,41 @@ fun OnBoardingMain() {
         }
 
         1 -> {
-          HealthConcernScreen(onBackPressed = {
+          HealthConcernScreen(viewModel = viewModel, onBackPressed = {
             coroutineScope.launch {
               pagerState.animateScrollToPage(0)
+            }
+          }, onClickNext = {
+            coroutineScope.launch {
+              pagerState.animateScrollToPage(2)
             }
           })
         }
 
+        2 -> {
+          DietScreen(viewModel = viewModel, onBackPressed = {
+            coroutineScope.launch {
+              pagerState.animateScrollToPage(1)
+            }
+          }, onClickNext = {
+            coroutineScope.launch {
+              pagerState.animateScrollToPage(3)
+            }
+          })
+        }
+
+        3 -> {
+          AllergyScreen(viewModel = viewModel, onBackPressed = {
+            coroutineScope.launch {
+              pagerState.animateScrollToPage(2)
+            }
+          }, onClickNext = {
+
+          })
+        }
+
         else -> {
-          HealthConcernScreen(onBackPressed = {
+          HealthConcernScreen(viewModel = viewModel, onBackPressed = {
             coroutineScope.launch {
               pagerState.animateScrollToPage(0)
             }
@@ -76,19 +141,33 @@ fun OnBoardingMain() {
 
     }
 
-    CustomLinearProgressBar(progress = pagerState.currentPage / 4f)
+
+
+    CustomLinearProgressBar(progress = { pagerState.currentPage / 4f })
 
   }
 
 }
 
 @Composable
-fun CustomLinearProgressBar(modifier: Modifier = Modifier, progress: Float) {
+fun CustomLinearProgressBar(modifier: Modifier = Modifier, progress: () -> Float) {
   Box(
     modifier = modifier
       .height(14.dp)
-      .clip(RoundedCornerShape(size = 10.dp))
-      .fillMaxWidth(progress)
+      .clip(
+        if (progress() < 1f)
+          RoundedCornerShape(
+            topStart = 0.dp,
+            topEnd = 10.dp,
+            bottomStart = 0.dp,
+            bottomEnd = 10.dp
+          )
+        else
+          RoundedCornerShape(
+            size = 0.dp
+          )
+      )
+      .fillMaxWidth(progress())
       .background(color = MaterialTheme.colorScheme.primary)
   )
 }
